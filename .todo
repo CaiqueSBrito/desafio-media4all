@@ -1,0 +1,238 @@
+# TODO - Teams Tracking System
+
+Prazo de entrega: 2026-05-25 12:00
+Stack obrigatoria: Next.js 16, Tailwind CSS, TanStack Query, React Hook Form, Zod, shadcn/ui, Spring Boot 3, Java 17+, Spring Data JPA, MySQL, WebClient.
+
+## P0 - Validacao inicial
+
+- [X] Confirmar no OpenAPI exposto os 4 fluxos de sincronizacao: agentes, localizacoes, check-ins e geofences.
+- [X] Mapear endpoints disponiveis da API externa em docs/api-externa-endpoints.md.
+- [X] Validar formato de paginacao documentado: agentes com maximo de 50 registros por pagina.
+- [X] Validar que `syncToken` aparece no contrato de `POST /api/v1/sync/check-ins`, mas nao nos itens de `GET /api/v1/check-ins/`.
+- [X] Validar contrato dos dados de agentes, posicoes GPS, check-ins e rotas.
+- [X] Definir variaveis de ambiente para URL da API externa, API key, MySQL e configuracoes de retry.
+- [X] Garantir que a API key nao seja versionada no repositorio publico.
+
+## P0 - Estrutura do repositorio
+
+- [X] Criar estrutura raiz teams-tracking-system/.
+- [X] Criar frontend/.
+- [X] Criar backend/.
+- [X] Criar docker-compose.yml.
+- [X] Criar README.md.
+- [X] Criar docs/.
+- [X] Renomear o modulo backend para `teams-tracking-api`.
+- [x] Documentar decisoes tecnicas iniciais em docs/.
+- [X] Consolidar decisoes tecnicas mais importantes do estado atual em docs/decisoes-tecnicas-principais.md.
+- [X] Documentar aplicacao no Obsidian para onboarding Spring vindo de FastAPI/Django.
+- [X] Documentar codigo backend em nivel de fluxo, metodo, persistencia e limitacoes tecnicas.
+
+## P0 - Backend Spring Boot 3
+
+- [X] Criar projeto backend com Spring Boot 3 e Java 17+.
+- [X] Configurar Spring Data JPA.
+- [X] Configurar MySQL.
+- [X] Configurar profiles de ambiente.
+- [X] Configurar tratamento global de erros.
+- [X] Configurar validacao de entrada.
+- [X] Configurar WebClient para API externa.
+- [X] Criar Swagger/OpenAPI se houver tempo dentro do escopo inicial.
+- [X] Ajustar configuracao do workspace para atualizar automaticamente a resolucao Maven/Java no editor.
+- [X] Corrigir source roots da IDE para o modulo backend apontando para o `backend/teams-tracking-api` real.
+
+## P0 - Arquitetura backend
+
+- [X] Criar camada models para entidades de dominio.
+- [X] Criar camada repositories para persistencia e consultas.
+- [X] Criar camada services para regras de negocio.
+- [X] Criar camada controllers/routes apenas para endpoints.
+- [X] Criar camada dtos/schemas para contratos de entrada e saida.
+- [X] Criar camada core/config para configuracoes compartilhadas.
+- [X] Garantir que rotas nao contenham regra de negocio.
+- [X] Garantir que acesso a dados ocorra apenas via repositories.
+
+## P0 - Modelagem de dados
+
+- [X] Modelar Agent.
+- [X] Modelar AgentPosition.
+- [X] Modelar CheckIn.
+- [X] Modelar RouteHistory ou RoutePoint.
+- [X] Modelar SyncExecution.
+- [X] Modelar SyncCursor ou SyncToken.
+- [X] Modelar OperationalStatus se necessario para painel.
+- [X] Definir indices para consultas por agente, data, status e origem externa.
+- [X] Definir chaves externas e restricoes de unicidade para idempotencia.
+
+## P0 - CRUD de agentes
+
+- [X] Criar endpoint de listagem de agentes.
+- [X] Criar endpoint de detalhe de agente.
+- [X] Criar endpoint de criacao de agente.
+- [X] Criar endpoint de atualizacao de agente.
+- [X] Criar endpoint de remocao ou inativacao de agente.
+- [X] Validar payloads com contratos explicitos.
+- [X] Impedir duplicidades conforme identificador de negocio.
+- [X] Criar testes de service e repository para regras principais.
+
+## P0 - Geolocalizacao e rotas
+
+- [X] Implementar calculo de distancia com Haversine.
+- [X] Validar latitude e longitude.
+- [X] Tratar coordenadas GPS imprecisas.
+- [X] Persistir historico completo de posicoes.
+- [X] Consultar rota do dia por agente.
+- [X] Calcular distancia percorrida no dia.
+- [X] Ordenar pontos de rota por horario real do evento.
+- [X] Diferenciar origem manual, sincronizada e externa quando aplicavel.
+
+## P0 - Check-ins manuais
+
+- [X] Criar endpoint para registrar check-in manual.
+- [X] Validar agente ativo.
+- [X] Validar coordenadas.
+- [X] Persistir data/hora do check-in.
+- [X] Associar check-in ao agente.
+- [X] Aplicar idempotencia para evitar duplicidade em reenvios.
+- [X] Exibir check-ins no historico do agente.
+
+## P0 - Integracao com API GPS externa
+
+- [X] Usar WebClient obrigatoriamente.
+- [X] Implementar client dedicado para API externa.
+- [X] Configurar base URL por variavel de ambiente.
+- [X] Configurar API key por variavel de ambiente.
+- [X] Implementar sincronizacao manual de agentes externos via upsert por `externalId`.
+- [X] Criar endpoint interno para disparar sincronizacao manual de agentes.
+- [X] Registrar execucoes da sincronizacao manual de agentes em `SyncExecution`.
+- [X] Implementar sincronizacao manual de localizacoes externas atualizando posicao atual e historico.
+- [X] Criar endpoint interno para disparar sincronizacao manual de localizacoes.
+- [X] Implementar paginacao obrigatoria.
+- [X] Implementar sincronizacao incremental via cursor real da API externa.
+- [X] Persistir ultimo cursor/checkpoint valido.
+- [X] Tratar erro 429 com retry e backoff.
+- [X] Tratar erro 503 com retry e falha controlada.
+- [X] Registrar tentativas de retry, ocorrencias de 429 e ocorrencias de 503 em `SyncExecution`.
+- [X] Registrar payloads invalidos como falha de sincronizacao sem derrubar a aplicacao.
+- [X] Evitar duplicidades em dados recebidos da API externa.
+- [X] Implementar sincronizacao manual de geofences externas via upsert por `externalId`.
+- [X] Criar endpoint interno para disparar sincronizacao manual de geofences.
+- [X] Registrar execucoes da sincronizacao manual de geofences em `SyncExecution`.
+
+## P0 - Schedulers
+
+- [X] Implementar os 4 schedulers obrigatorios apos confirmar a especificacao completa.
+- [X] Separar cada scheduler em componente independente.
+- [X] Evitar execucao concorrente do mesmo scheduler.
+- [X] Persistir inicio, fim, status e resultado de cada execucao.
+- [X] Persistir quantidade de registros lidos, criados, atualizados, ignorados e com erro.
+- [X] Persistir mensagem de erro quando houver falha.
+- [X] Garantir retry controlado sem loop infinito.
+
+## P0 - Idempotencia e conflitos
+
+- [X] Definir chave de idempotencia para posicoes externas.
+- [X] Definir chave de idempotencia para check-ins.
+- [X] Definir estrategia para eventos repetidos.
+- [X] Definir estrategia para eventos atrasados.
+- [X] Definir criterio de conflito entre dado local e dado externo.
+- [X] Registrar conflitos relevantes para auditoria.
+- [X] Garantir que reprocessar a mesma pagina nao duplique dados.
+
+## P0 - Frontend Next.js 16
+
+- [X] Criar projeto frontend com Next.js 16 e App Router.
+- [X] Configurar Tailwind CSS.
+- [X] Configurar shadcn/ui.
+- [X] Configurar TanStack Query.
+- [X] Configurar React Hook Form.
+- [X] Configurar Zod.
+- [X] Criar camada de API client para backend.
+- [X] Criar tratamento padrao de erros.
+- [X] Criar layout principal da aplicacao.
+
+## P0 - Telas obrigatorias
+
+- [X] Criar tela de listagem de agentes.
+- [X] Criar tela de criacao de agente.
+- [X] Criar tela de edicao de agente.
+- [X] Criar tela de detalhes do agente.
+- [X] Criar tela de posicao atual do agente.
+- [X] Criar tela ou modal de check-in manual.
+- [X] Criar tela de historico de rota do dia.
+- [X] Criar painel de monitoramento da sincronizacao.
+- [X] Tratar loading, erro, vazio e sucesso em todas as telas.
+
+## P1 - Monitoramento operacional
+
+- [X] Criar endpoint backend de monitoramento da sincronizacao.
+- [X] Expor no backend ultimas execucoes, falhas recentes, retries, ocorrencias 429/503 e cursor.
+- [X] Exibir ultimo horario de sincronizacao.
+- [X] Exibir total de registros processados.
+- [X] Exibir total de falhas recentes.
+- [X] Exibir tentativas de retry.
+- [X] Exibir ocorrencias de 429.
+- [X] Exibir ocorrencias de 503.
+- [X] Exibir ultimo cursor/checkpoint salvo.
+- [X] Exibir detalhes de erros recentes sem expor env.
+- [X] Remover badges de status `Falha` e `Sucesso` do header e dos cards de monitoramento.
+
+## P1 - Dockerizacao
+
+- [ ] Criar servico MySQL no docker-compose.
+- [ ] Criar servico backend no docker-compose.
+- [ ] Criar servico frontend no docker-compose.
+- [ ] Configurar volume persistente do MySQL.
+- [ ] Configurar rede interna entre containers.
+- [ ] Documentar execucao com Docker no README.
+- [ ] Validar subida limpa do ambiente completo.
+
+## P1 - Testes
+
+- [ ] Criar testes unitarios para regras de negocio dos services.
+- [X] Criar testes para calculo Haversine.
+- [X] Criar testes para idempotencia.
+- [X] Criar testes para conflitos.
+- [X] Criar testes para client da API externa com mocks.
+- [X] Criar testes para schedulers.
+- [ ] Criar testes basicos de formularios no frontend se houver tempo.
+- [X] Validar build do backend.
+- [X] Validar build do frontend.
+
+## P2 - Diferenciais
+
+- [X] Adicionar Swagger/OpenAPI.
+- [ ] Adicionar Circuit Breaker com Resilience4j.
+- [ ] Adicionar mapa interativo com Leaflet.
+- [ ] Exibir agentes no mapa.
+- [ ] Exibir rota do dia no mapa.
+- [ ] Implementar geofencing visual.
+- [ ] Implementar WebSocket ou SSE para atualizacao em tempo real.
+- [X] Melhorar painel operacional com filtros e indicadores.
+
+## P0 - README
+
+- [X] Explicar objetivo do projeto.
+- [X] Explicar arquitetura geral.
+- [X] Explicar estrutura de pastas.
+- [X] Explicar variaveis de ambiente.
+- [ ] Explicar como executar com Docker.
+- [X] Explicar como executar localmente.
+- [X] Explicar schedulers implementados.
+- [X] Explicar sincronizacao incremental.
+- [X] Explicar tratamento de paginacao.
+- [X] Explicar tratamento de 429 e 503.
+- [X] Explicar estrategia de retry/backoff.
+- [X] Explicar idempotencia e conflitos.
+- [X] Explicar decisoes tecnicas.
+- [X] Listar diferenciais implementados.
+- [X] Listar limitacoes conhecidas.
+
+## Sequencia recomendada
+
+- [X] Backend base, banco, entidades e CRUD de agentes.
+- [X] Integracao com API externa usando WebClient.
+- [X] Schedulers, cursor incremental, paginacao, retries e historico.
+- [X] Frontend com telas obrigatorias.
+- [X] Monitoramento operacional.
+- [ ] Docker, README e validacao final.
+- [ ] Extras somente depois do obrigatorio estar funcionando.
